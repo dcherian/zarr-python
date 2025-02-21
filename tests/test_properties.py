@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
@@ -30,8 +31,17 @@ def test_roundtrip(data: st.DataObject, zarr_format: int) -> None:
     assert_array_equal(nparray, zarray[:])
 
 
-@given(array=arrays())
-def test_array_creates_implicit_groups(array):
+@given(data=st.data())
+def test_array_creates_implicit_groups(data):
+    """We limit the complexity to complex paths and array names,
+    and skip the other axes of complexity."""
+    array = data.draw(
+        arrays(
+            attrs=st.none(),
+            compressors=st.none(),
+            arrays=npst.arrays(shape=st.just((1, 1)), dtype=st.just(np.int32)),
+        )
+    )
     path = array.path
     ancestry = path.split("/")[:-1]
     for i in range(len(ancestry)):
